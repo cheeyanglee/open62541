@@ -1,0 +1,34 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all,-pie
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		-DBUILD_SHARED_LIBS=ON \
+		-DUA_ENABLE_PUBSUB=ON \
+		-DUA_ENABLE_PUBSUB_ETH_UADP=ON \
+		-DUA_BUILD_EXAMPLES=OFF \
+		-DUA_ENABLE_PUBSUB_CUSTOM_PUBLISH_HANDLING=OFF \
+		-DUA_ENABLE_PUBSUB_ETH_UADP_ETF=ON \
+		-DUA_ENABLE_PUBSUB_ETH_UADP_XDP=ON \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DUA_PACK_DEBIAN=ON \
+		-DUA_NAMESPACE_ZERO=FULL \
+		-DUA_PACK_DEBIAN=ON  \
+		-DUA_ENABLE_AMALGAMATION=OFF 
+
+override_dh_auto_test:
+	dh_auto_test -- ARGS+=--output-on-failure
+
+override_dh_auto_build:
+	dh_auto_build -- -j`nproc --ignore=2`
+	make -C obj-${DEB_HOST_GNU_TYPE} doc doc_pdf
+
+override_dh_install:
+	dh_install
+	dh_sphinxdoc -X_sources
+
+%:
+	dh $@ --buildsystem=cmake --parallel
